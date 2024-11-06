@@ -13,17 +13,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.23
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
 
-    - name: Build the Docker image
-      id: build
-      run: |
-        IMAGE_TAG=${GITHUB_REF#refs/tags/}
-        docker build -t cassioik/health-check-alert:${IMAGE_TAG} .
-        docker tag cassioik/health-check-alert:${IMAGE_TAG} cassioik/health-check-alert:latest
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
@@ -31,8 +25,7 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Push the Docker image
+    - name: Build and push Docker image
       run: |
         IMAGE_TAG=${GITHUB_REF#refs/tags/}
-        docker push cassioik/health-check-alert:${IMAGE_TAG}
-        docker push cassioik/health-check-alert:latest
+        docker buildx build --platform linux/amd64,linux/arm64 -t cassioik/health-check-alert:${IMAGE_TAG} -t cassioik/health-check-alert:latest --push .
