@@ -25,7 +25,7 @@ var httpClient = &http.Client{
 
 func main() {
     if urlToPing == "" || discordWebhookURL == "" {
-        fmt.Println("URL_TO_PING and DISCORD_WEBHOOK_URL environment variables must be set")
+        fmt.Println(time.Now().Format(time.RFC3339), "URL_TO_PING and DISCORD_WEBHOOK_URL environment variables must be set")
         return
     }
 
@@ -34,7 +34,7 @@ func main() {
         if err != nil || resp.StatusCode != http.StatusOK {
             sendToDiscord(fmt.Sprintf("Ping failed: %v", err))
         } else {
-            fmt.Println("Ping successful")
+            fmt.Println(time.Now().Format(time.RFC3339), "Ping successful")
         }
         if resp != nil {
             resp.Body.Close()
@@ -47,20 +47,17 @@ func sendToDiscord(message string) {
     payload := map[string]string{"content": message}
     payloadBytes, err := json.Marshal(payload)
     if err != nil {
-        fmt.Printf("Failed to marshal payload: %v\n", err)
+        fmt.Printf(time.Now().Format(time.RFC3339), "Failed to marshal payload: %v\n", err)
         return
     }
 
     resp, err := httpClient.Post(discordWebhookURL, "application/json", bytes.NewBuffer(payloadBytes))
     if err != nil {
-        fmt.Printf("Failed to send message to Discord: %v\n", err)
+        fmt.Printf(time.Now().Format(time.RFC3339), "Failed to send to Discord: %v\n", err)
         return
     }
     defer resp.Body.Close()
-
-    if resp.StatusCode != http.StatusOK {
-        fmt.Printf("Discord returned non-OK status: %v\n", resp.Status)
-    }
+    fmt.Println(time.Now().Format(time.RFC3339), "Message sent to Discord")
 }
 
 func getEnvAsInt(name string, defaultValue int) int {

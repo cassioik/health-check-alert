@@ -1,0 +1,40 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.23
+
+    - name: Build the Docker image
+      id: build
+      run: |
+        IMAGE_TAG=${GITHUB_REF#refs/tags/}
+        docker build -t cassioik/health-check-alert:${IMAGE_TAG} .
+        docker tag cassioik/health-check-alert:${IMAGE_TAG} cassioik/health-check-alert:latest
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Push the Docker image
+      run: |
+        IMAGE_TAG=${GITHUB_REF#refs/tags/}
+        docker push cassioik/health-check-alert:${IMAGE_TAG}
+        docker push cassioik/health-check-alert:latest
